@@ -30,9 +30,17 @@ def download(task, id)
     "2022/p/LP/LAS/#{id}.zip"
   system <<-EOS
 curl -o #{task}/#{id}.zip #{url}
+  EOS
+  good = File.size("#{task}/#{id}.zip") > 300
+  if good
+    system <<-EOS
 unzip -d #{task} #{task}/#{id}.zip
+    EOS
+  end
+  system <<-EOS
 rm #{task}/#{id}.zip
   EOS
+  return good
 end
 
 def copc(task, id)
@@ -57,6 +65,7 @@ def move(task, id)
   system <<-EOS
 mc mv #{task}/#{id}.copc.laz #{OBST}/tansei/#{id}.copc.laz
   EOS
+  print "\n"
 end
 
 def open_geojsons(task) 
@@ -76,6 +85,7 @@ def extent(task, id, geojsons)
     }
   }
   geojsons.print "\x1e#{JSON.dump(f)}\n"
+  geojsons.flush
 end
 
 # main
@@ -84,7 +94,7 @@ task_dir do |task|
   file_id do |id|
     open_geojsons(task) do |geojsons|
       $stderr.print "[#{task}] #{id}\n"
-      download(task, id)
+      next if !download(task, id)
       copc(task, id)
       extent(task, id, geojsons)
       move(task, id)
