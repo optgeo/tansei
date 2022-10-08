@@ -70,7 +70,7 @@ end
 
 def open_geojsons(task) 
   filename = Digest::MD5.hexdigest(task)
-  File.open("#{filename}.geojsons", "w") {|w|
+  File.open("geojsons/#{filename}.geojsons", "w") {|w|
     yield w
   }
 end
