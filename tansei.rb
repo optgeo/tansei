@@ -5,7 +5,7 @@ require 'tmpdir'
 require './constants'
 
 def task_dir
-  Dir.mktmpdir('tansei', '/var/tmp') {|task|
+  Dir.mktmpdir('tansei', TMPDIR) {|task|
     yield task
   }
 end
@@ -25,13 +25,17 @@ def file_id
   }
 end
 
+def good?(zip_path)
+  /Zip archive/.match(`file #{zip_path}`)
+end
+
 def download(task, id)
   url = "https://gic-shizuoka.s3.ap-northeast-1.amazonaws.com/" + 
     "2022/p/LP/LAS/#{id}.zip"
   system <<-EOS
 curl -o #{task}/#{id}.zip #{url}
   EOS
-  good = File.size("#{task}/#{id}.zip") > 300
+  good = good?("#{task}/#{id}.zip")
   if good
     system <<-EOS
 unzip -d #{task} #{task}/#{id}.zip
@@ -88,16 +92,23 @@ def extent(task, id, geojsons)
   geojsons.flush
 end
 
+def remove(task, id)
+  system <<-EOS
+rm #{task}/#{id}.las
+  EOS
+end
+
 # main
 prepare_list
 task_dir do |task|
-  file_id do |id|
-    open_geojsons(task) do |geojsons|
+  open_geojsons(task) do |geojsons|
+    file_id do |id|
       $stderr.print "[#{task}] #{id}\n"
       next if !download(task, id)
       copc(task, id)
       extent(task, id, geojsons)
       move(task, id)
+      remove(task, id)
     end
   end
 end

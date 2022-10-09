@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<link rel="stylesheet" href="maplibre-gl.css"/>
+<script src="maplibre-gl.js"></script>
+<script src="flatgeobuf-geojson.min.js"></script>
+</head>
+<body>
+<style>
+body { margin:0; padding:0; font-family: 'Roboto', sans-serif; color: #333333}
+#map { top:0; height: 100vh; width: 100vw; position: fixed; z-index: 0; }
+</style>
+<div id="map"></div>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const response = await fetch("tansei.fgb")
+  const map = new maplibregl.Map({
+    container: "map",
+    style: "https://optgeo.github.io/optbv-intl/optbv-intl-dev.json",
+    hash: true, 
+    center: [137.88, 35.22],
+    zoom: 12,
+    maxZoom: 22
+  })
+  map.addControl(new maplibregl.NavigationControl())
+  map.addControl(new maplibregl.ScaleControl({
+    maxWidth: 200, unit: "metric"
+  }))
+  map.on('load', async () => {
+    const fc = { type: "FeatureCollection", features: [] }
+    let id = 0
+    for await (const f of
+      flatgeobuf.deserialize(response.body, undefined, undefined)) {
+      fc.features.push({...f, id: id})
+      id++
+    }
+    map.addSource('tansei', {
+      type: 'geojson',
+      data: fc
+    })
+    map.addLayer({
+      id: 'tansei',
+      type: 'fill',
+      source: 'tansei',
+      paint: {
+        'fill-opacity': 0.5,
+        'fill-color': [
+          'case',
+          [
+            'boolean',
+            [
+              'feature-state',
+              'hover'
+            ],
+            false
+          ],
+          'rgb(200, 0, 0)',
+          'rgb(200, 200, 200)'
+        ]
+      }
+    })
+
+    let hovers = []
+    const N = 2
+    map.on('mousemove', (e) => {
+      let features = map.queryRenderedFeatures(e.point, {
+        layers: ['tansei']
+      })
+      mouseout()
+      let n = 0
+      for (f of features) {
+        mouseover(f)
+        n++
+        if (n == N) break
+      }
+    })
+    map.on('mouseout', (e) => {
+      mouseout()
+    })
+    map.on('click', (e) => {
+      for (f of hovers) {
+        const url = `https://viewer.copc.io/?copc=` +
+          `https://x.optgeo.org/tansei/` +
+          `${f.properties.id}.copc.laz`
+        window.open(url, '_blank')
+        console.log(url)
+      }
+    })
+    mouseout = () => {
+      for (f of hovers) {
+        map.getCanvasContainer().style.cursor = 'default'
+        map.setFeatureState({
+          source: f.source,
+          id: f.id
+        }, {
+          hover: false
+        })
+      }
+      hovers = []
+    }
+    mouseover = (f) => {
+      hovers.push(f)
+      map.getCanvasContainer().style.cursor = 'pointer'
+      map.setFeatureState({
+        source: f.source,
+        id: f.id
+      }, {
+        hover: true
+      })
+    }
+  })
+})
+</script>
+</body>
+
