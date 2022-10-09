@@ -14,6 +14,9 @@ To serve COPC file from IOS by mounting the bucket using `s3fs` and by serving t
 s3fs tansei tansei -o passwd_file=/home/pi/.passwd-s3fs,use_path_request_style,url=https://[the server]:8911,rw,allow_other,uid=$(id -u www-data),gid=$(id -g www-data)
 ```
 
+### Demo
+https://viewer.copc.io/?copc=https://x.optgeo.org/tansei/08oc4093.copc.laz
+
 ## Software used
 - `mc`
 - `pdal`
