@@ -87,6 +87,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log(url)
       }
     })
+    map.on('contextmenu', (e) => {
+      for (f of hovers) {
+        const url = 
+          `https://x.optgeo.org/tansei/` +
+          `${f.properties.id}.copc.laz`
+        window.open(url, '_blank')
+        console.log(url)
+      }
+    })
     mouseout = () => {
       for (f of hovers) {
         map.getCanvasContainer().style.cursor = 'default'
