@@ -5,4 +5,5 @@ LIST_URL = 'https://gic-shizuoka.s3.ap-northeast-1.amazonaws.com/2022/p/LP/etc/L
 LIST_NAME = 'ls.txt'
 
 TMPDIR = '/var/tmp'
-GEOJSONS_PATH = 'extent.geojsons'
+EXTENT_PATH = 'extent.geojsons'
+UPDATE_EXTENT_PATH = 'update-extent.geojsons'

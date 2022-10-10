@@ -5,7 +5,7 @@ require 'tmpdir'
 $n = 0
 
 def task
-  Dir.mktmpdir('extent', TMPDIR) {|dir|
+  Dir.mktmpdir('update-extent', TMPDIR) {|dir|
     yield dir
   }
 end
@@ -19,7 +19,7 @@ def files
 end
 
 def write
-  File.open(EXTENT_PATH, 'w') {|w|
+  File.open(UPDATE_EXTENT_PATH, 'w') {|w|
     yield w
   }
 end
@@ -27,11 +27,23 @@ end
 # main
 write do |w|
   task do |dir|
+    ids = []
     count = 0
     files do |file|
+      ids << File.basename(file, '.copc.laz')
+    end 
+    File.foreach(EXTENT_PATH) do |l|
       count += 1
-      id = File.basename(file, '.copc.laz')
-      $stderr.print "#{id} (#{count}/#{$n})\n"
+      f = JSON.parse(l.sub("\x1e", ''))
+      id = f['properties']['id']
+      ids.delete(id)
+      w.print l
+      $stderr.print "[#{dir}] reused #{id} (#{count}/#{$n})\n"
+    end
+    ids.each do |id|
+      count += 1
+      $stderr.print "[#{dir}] calculate #{id} (#{count}/#{$n})\n"
+      file = "#{id}.copc.laz"
       system <<-EOS
 mc cp #{OBST}/tansei/#{file} #{dir}
       EOS
@@ -54,3 +66,4 @@ rm #{dir}/#{file}
     end
   end
 end
+$stderr.print "Done. You may want to mv updated-extent.geojson extent.geojson\n"

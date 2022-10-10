@@ -74,16 +74,18 @@ end
 
 def open_geojsons(task) 
   filename = Digest::MD5.hexdigest(task)
-  File.open("geojsons/#{filename}.geojsons", "w") {|w|
+  File.open("geojsons/4326-#{filename}.geojsons", "w") {|w|
     yield w
   }
 end
 
 def extent(task, id, geojsons)
-  boundary = JSON.parse(`pdal info --boundary #{task}/#{id}.copc.laz`)
+  g = JSON.parse(
+    `pdal info #{task}/#{id}.copc.laz`
+  )['stats']['bbox']['EPSG:4326']['boundary']
   f = {
     :type => 'Feature',
-    :geometry => boundary['boundary']['boundary_json'],
+    :geometry => g,
     :properties => {
       :id => id
     }
