@@ -24,6 +24,16 @@ def write
   }
 end
 
+def existent_lines
+  paths = Dir.glob("geojsons/4326*.geojsons")
+  paths << EXTENT_PATH
+  paths.each {|path|
+    File.foreach(path) {|l|
+      yield l
+    }
+  }
+end
+
 # main
 write do |w|
   task do |dir|
@@ -32,7 +42,7 @@ write do |w|
     files do |file|
       ids << File.basename(file, '.copc.laz')
     end 
-    File.foreach(EXTENT_PATH) do |l|
+    existent_lines do |l|
       count += 1
       f = JSON.parse(l.sub("\x1e", ''))
       id = f['properties']['id']
