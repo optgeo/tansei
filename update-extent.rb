@@ -43,12 +43,13 @@ write do |w|
       ids << File.basename(file, '.copc.laz')
     end 
     existent_lines do |l|
-      count += 1
       f = JSON.parse(l.sub("\x1e", ''))
       id = f['properties']['id']
-      ids.delete(id)
-      w.print l
-      $stderr.print "[#{dir}] reused #{id} (#{count}/#{$n})\n"
+      if ids.delete(id)
+        count += 1
+        w.print l
+        $stderr.print "[#{dir}] reused #{id} (#{count}/#{$n})\n"
+      end
     end
     ids.each do |id|
       count += 1

@@ -1,7 +1,9 @@
 desc 'create FlatGeobuf file from GeoJSON extent file'
 task :fgb do
   sh <<-EOS
-ogr2ogr -f FlatGeobuf docs/tansei.fgb extent.geojsons
+sort extent.geojsons | uniq | grep -v 08nd5180 > tmp.geojsons
+ogr2ogr -f FlatGeobuf docs/tansei.fgb tmp.geojsons
+rm tmp.geojsons
   EOS
 end
 
